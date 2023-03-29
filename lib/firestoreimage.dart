@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,13 +24,19 @@ class _FirestoreImageState extends State<FirestoreImage> {
     if(image != null)
     {
       pickedImage =File(image.path);
+      setState(() {
+        storageImage();
+      });
     }
   }
 
   storageImage()async
   {
-    var refdetails=await FirebaseStorage.instance.ref().child("image/k");
-    refdetails.putFile(pickedImage!);
+    var refdetails=await FirebaseStorage.instance.ref().child("image/${pickedImage!.path}");
+    await refdetails.putFile(pickedImage!);
+    var url=await refdetails.getDownloadURL();
+    FirebaseFirestore.instance.collection("images").add({"images":url});
+    print(url);
   }
   @override
   Widget build(BuildContext context) {
@@ -38,7 +45,6 @@ class _FirestoreImageState extends State<FirestoreImage> {
         children: [
           Center(child: ElevatedButton(onPressed: (){
             pickimage();
-            storageImage();
 
           }, child: Text("upload image")))
         ],),
